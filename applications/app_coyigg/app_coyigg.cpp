@@ -61,7 +61,7 @@ int main(int argc, char** args) {
 //   mlMsh.ReadCoarseMesh("./input/square.neu", "seventh", scalingFactor);
   
   /** Built-in cube-structured mesh generator */
-    mlMsh.GenerateCoarseBoxMesh(8, 8, 0, -0.5, 0.5, -0.5, 0.5, 0.0, 0.0, QUAD9, "seventh");
+    mlMsh.GenerateCoarseBoxMesh(2, 2, 0, -0.5, 0.5, -0.5, 0.5, 0.0, 0.0, QUAD9, "seventh");
     
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
       probably in the furure it is not going to be an argument of this function   */
@@ -74,7 +74,7 @@ int main(int argc, char** args) {
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("U", LAGRANGE, FIRST);
+  mlSol.AddSolution("U", LAGRANGE, SERENDIPITY);
 //   mlSol.AddSolution("V", LAGRANGE, SERENDIPITY);
 //   mlSol.AddSolution("W", LAGRANGE, SECOND);
 //   mlSol.AddSolution("P", DISCONTINOUS_POLYNOMIAL, ZERO);
@@ -196,6 +196,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   if (assembleMatrix)
     KK->zero(); // Set to zero all the entries of the Global Matrix
 
+ unsigned counter=0;
+
   // element loop: each process loops only on the elements that owns
   for (int iel = msh->IS_Mts2Gmt_elem_offset[iproc]; iel < msh->IS_Mts2Gmt_elem_offset[iproc + 1]; iel++) {
 
@@ -277,7 +279,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
               for (unsigned kdim = 0; kdim < dim; kdim++) {
                 laplace += (phi_x[i * dim + kdim] * phi_x[j * dim + kdim]) * weight;
               }
-
+              
+    counter++;
               Jac[i * nDofu + j] += laplace;
             } // end phi_j loop
           } // endif assemble_matrix
@@ -286,6 +289,8 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
       } // end gauss point loop
     } // endif single element not refined or fine grid loop
 
+
+  
     //--------------------------------------------------------------------------------------------------------
     // Add the local Matrix/Vector into the global Matrix/Vector
 
@@ -299,6 +304,7 @@ void AssemblePoissonProblem(MultiLevelProblem& ml_prob) {
   } //end element loop for each process
 
   RES->close();
+    std::cout << "output the number of counter" <<"    "<< counter << std::endl;
 
   if (assembleMatrix) KK->close();
 

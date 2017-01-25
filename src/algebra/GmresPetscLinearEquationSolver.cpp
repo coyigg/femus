@@ -154,10 +154,16 @@ namespace femus {
 
       if(_solver_type != PREONLY) {
         KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
-        KSPSetNormType(_ksp, KSP_NORM_NONE);
+        //KSPSetNormType(_ksp, KSP_NORM_NONE);
       }
 
+      if(_solver_type == FGMRES) {
+        KSPSetNormType(_ksp, KSP_NORM_UNPRECONDITIONED);
+      }
+      
       KSPSetFromOptions(_ksp);
+      
+            
       KSPGMRESSetRestart(_ksp, _restart);
 
       SetPreconditioner(_ksp, _pc);
@@ -218,12 +224,14 @@ namespace femus {
     }
     else {
       PCMGGetSmoother(pcMG, level , &subksp);
-      KSPSetTolerances(subksp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npre);
+      KSPSetPCSide(subksp,PC_RIGHT);
+      KSPSetNormType(subksp, KSP_NORM_UNPRECONDITIONED);
+      KSPSetTolerances(subksp, .99, PETSC_DEFAULT, PETSC_DEFAULT, npre);
     }
 
     this->SetPetscSolverType(subksp);
     std::ostringstream levelName;
-    levelName << "level-" << level;
+    levelName << "level_" << level<<"_";
     KSPSetOptionsPrefix(subksp, levelName.str().c_str());
     KSPSetFromOptions(subksp);
 
@@ -253,7 +261,7 @@ namespace femus {
       if(npre != npost) {
         KSP subkspUp;
         PCMGGetSmootherUp(pcMG, level , &subkspUp);
-        KSPSetTolerances(subkspUp, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, npost);
+        KSPSetTolerances(subkspUp, 0.99, PETSC_DEFAULT, PETSC_DEFAULT, npost);
         this->SetPetscSolverType(subkspUp);
         KSPSetPC(subkspUp, subpc);
         PC subpcUp;
@@ -465,7 +473,6 @@ namespace femus {
         ierr = KSPSetType(ksp, (char*) KSPFGMRES);
         CHKERRABORT(MPI_COMM_WORLD, ierr);
         return;
-
       case RICHARDSON:
         KSPSetType(ksp, (char*) KSPRICHARDSON);
         KSPRichardsonSetScale(ksp, _richardsonScaleFactor);

@@ -52,20 +52,9 @@ namespace femus {
       void SetMarkerx0(std::vector <double> &x0) {
         _x0 = x0;
       }
-<<<<<<< HEAD
-      
-      void GetMarkerLocalCoordinates( std::vector< double > &xi ){
-	
-	xi.resize(_dim);
-	if(_mproc == _iproc){
-	  xi = _xi;
-	}
-	MPI_Bcast(&xi[0], _dim, MPI_DOUBLE, _mproc, PETSC_COMM_WORLD);
-=======
 
       void SetMarkerCoordinates(std::vector <double> &x) {
         _x = x;
->>>>>>> cc43bdf809caf236ed832eaf58602264d327b5d6
       }
 
       unsigned GetMarkerProc() {

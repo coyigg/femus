@@ -35,9 +35,8 @@
 using namespace femus;
 
 bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[], double& value, const int faceIndex, const double time) {
-  bool dirichlet = false;//true; //dirichlet
+  bool dirichlet = false;//true; //dirichlet //specify Neumann boundary condition
   value = 0.;
-
   return dirichlet;
 }
 
@@ -61,7 +60,6 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 void AssembleTemperature_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
-
 int main(int argc, char** args) {
 
   // init Petsc-MPI communicator
@@ -83,20 +81,18 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 9;
-  unsigned sizeOfSubdomains = numberOfUniformLevels - 8; // each subdomain will have 4^sizeOfSubdomains elements
+  unsigned numberOfUniformLevels = 7;
+  unsigned sizeOfSubdomains = numberOfUniformLevels - 1; // each subdomain will have 4^sizeOfSubdomains elements
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
   // erase all the coarse mesh levels
   mlMsh.EraseCoarseLevels(numberOfUniformLevels - 2);
-
-
   MultiLevelSolution mlSol(&mlMsh);
 
   // add variables to mlSol
-  mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST);;
-  mlSol.FixSolutionAtOnePoint("T");
+  mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST,SECOND;
+  mlSol.FixSolutionAtOnePoint("T"); //Specify all Neumann boundary condition;
   
   mlSol.Initialize("All");
 
@@ -120,18 +116,15 @@ int main(int argc, char** args) {
 
   //system.SetMaxNumberOfNonLinearIterations(10);
   //system.SetNonLinearConvergenceTolerance(1.e-8);
-
   system.SetMaxNumberOfLinearIterations(1);
   system.SetAbsoluteLinearConvergenceTolerance(1.e-10);
 
-
 //   system.SetMaxNumberOfResidualUpdatesForNonlinearIteration(2);
 //   system.SetResidualUpdateConvergenceTolerance(1.e-15);
-
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(0);
-  system.SetNumberPostSmoothingStep(1);
+  system.SetNumberPreSmoothingStep(1);
+  system.SetNumberPostSmoothingStep(0);
   // initilaize and solve the system
 
   system.init();
@@ -139,17 +132,14 @@ int main(int argc, char** args) {
   system.SetSolverFineGrids(FGMRES);
   //system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(MLU_PRECOND);
-
-  system.SetTolerances(1.e-5, 1.e-15, 1.e+50, 1000, 1000);
+  system.SetTolerances(1.e-6, 1.e-10, 1.e+50, 1000, 1000);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");
   system.SetNumberOfSchurVariables(0);
   system.SetElementBlockNumber(sizeOfSubdomains);
 
-
   system.PrintSolverInfo(false);
-
   system.MLsolve();
 
 
@@ -163,8 +153,6 @@ int main(int argc, char** args) {
   //vtkIO.Write(DEFAULT_OUTPUTDIR, "linear", variablesToBePrinted);
 
   mlMsh.PrintInfo();
-
-
   return 0;
 }
 
@@ -297,9 +285,7 @@ void AssembleTemperature_AD(MultiLevelProblem& ml_prob) {
       // evaluate the solution, the solution derivatives and the coordinates in the gauss point
       adept::adouble solT_gss = 0;
       vector < adept::adouble > gradSolT_gss(dim, 0.);
-
       vector < adept::adouble > x(dim, 0.);
-      
       
       for(unsigned i = 0; i < nDofsT; i++) {
         solT_gss += phiT[i] * solT[i];

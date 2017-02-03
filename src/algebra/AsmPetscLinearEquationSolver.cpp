@@ -265,7 +265,7 @@ namespace femus {
        PCFieldSplitSetIS(subpc,NULL,_localIs[i]);
        //PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
     }
-    //PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
+    PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
     KSPSetUp(subksp);
 
     KSP* subksps;
@@ -305,8 +305,11 @@ namespace femus {
 // 	KSPRichardsonSetScale(subksps[i], 1.1);
 	
         PC subpcs;
+	KSPSetType(subksps[i],KSPPREONLY); // add by Guoyi Ke
+
         KSPGetPC(subksps[i], &subpcs);
-        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+//        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	KSPSetTolerances(subksps[i], 1.0e-15, 1.0e-20, PETSC_DEFAULT, 1);
         KSPSetFromOptions(subksps[i]);
 
         if(this->_preconditioner_type == ILU_PRECOND)

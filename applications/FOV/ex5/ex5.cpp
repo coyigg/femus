@@ -40,7 +40,6 @@ bool SetBoundaryCondition(const std::vector < double >& x, const char SolName[],
   return dirichlet;
 }
 
-
 bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumber, const int& level) {
 
   bool refine = 0;
@@ -56,7 +55,10 @@ bool SetRefinementFlag(const std::vector < double >& x, const int& elemgroupnumb
 
 }
 
-
+double InitalValueT(const std::vector < double >& x){
+  double PI = acos(-1.0);
+  return 0.5*(cos(2*PI*x[0])+cos(2*PI*x[1]));
+}
 
 void AssembleTemperature_AD(MultiLevelProblem& ml_prob);    //, unsigned level, const unsigned &levelMax, const bool &assembleMatrix );
 
@@ -81,8 +83,8 @@ int main(int argc, char** args) {
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels , numberOfUniformLevels + numberOfSelectiveLevels, NULL);
 
-  unsigned numberOfUniformLevels = 7;
-  unsigned sizeOfSubdomains = numberOfUniformLevels - 1; // each subdomain will have 4^sizeOfSubdomains elements
+  unsigned numberOfUniformLevels = 6;
+  unsigned sizeOfSubdomains = numberOfUniformLevels - 2; // each subdomain will have 4^sizeOfSubdomains elements
   unsigned numberOfSelectiveLevels = 0;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 
@@ -92,9 +94,11 @@ int main(int argc, char** args) {
 
   // add variables to mlSol
   mlSol.AddSolution("T", LAGRANGE, SECOND);//FIRST,SECOND;
+//  mlSol.Initialize("T",InitalValueT);
   mlSol.FixSolutionAtOnePoint("T"); //Specify all Neumann boundary condition;
   
   mlSol.Initialize("All");
+ // mlSol.Initialize("T",InitalValueT);
 
   // attach the boundary condition function and generate boundary data
   mlSol.AttachSetBoundaryConditionFunction(SetBoundaryCondition);
@@ -129,10 +133,10 @@ int main(int argc, char** args) {
 
   system.init();
 
-  system.SetSolverFineGrids(FGMRES);
+  system.SetSolverFineGrids(GMRES);
   //system.SetSolverFineGrids(RICHARDSON);
   system.SetPreconditionerFineGrids(MLU_PRECOND);
-  system.SetTolerances(1.e-6, 1.e-10, 1.e+50, 1000, 1000);
+  system.SetTolerances(1.e-5, 1.e-10, 1.e+50, 1000, 1000);
 
   system.ClearVariablesToBeSolved();
   system.AddVariableToBeSolved("All");

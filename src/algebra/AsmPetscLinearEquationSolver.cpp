@@ -39,8 +39,8 @@ namespace femus {
   // ==============================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const char all[], const unsigned& overlap) {
-    _elementBlockNumber[0] = _msh->GetNumberOfElements()*1.5;
-    _elementBlockNumber[1] = _msh->GetNumberOfElements()*1.5;
+    _elementBlockNumber[0] = _msh->GetNumberOfElements();
+    _elementBlockNumber[1] = _msh->GetNumberOfElements();
     _standardASM = 1;
     _overlap = overlap;
   }
@@ -48,8 +48,8 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumber(const unsigned& block_elemet_number) {
-    _elementBlockNumber[0] = block_elemet_number*1.5;
-    _elementBlockNumber[1] = block_elemet_number*1.5;
+    _elementBlockNumber[0] = block_elemet_number;
+    _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
   }
@@ -57,7 +57,7 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumberSolid(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[0] = block_elemet_number*1.5;
+    _elementBlockNumber[0] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
@@ -66,7 +66,7 @@ namespace femus {
   // =================================================
 
   void AsmPetscLinearEquationSolver::SetElementBlockNumberFluid(const unsigned& block_elemet_number, const unsigned& overlap) {
-    _elementBlockNumber[1] = block_elemet_number*1.5;
+    _elementBlockNumber[1] = block_elemet_number;
     _bdcIndexIsInitialized = 0;
     _standardASM = 0;
     _overlap = overlap;
@@ -269,7 +269,7 @@ namespace femus {
     PetscPreconditioner::set_petsc_preconditioner_type(FIELDSPLIT_PRECOND, subpc);
     for(unsigned i=0;i<_localIsIndex.size();i++){
        PCFieldSplitSetIS(subpc,NULL,_localIs[i]);
-       //PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
+  //     PCFieldSplitSetIS(subpc,NULL,_overlappingIs[i]);
     }
     PCFieldSplitSetType(subpc, PC_COMPOSITE_ADDITIVE);
     KSPSetUp(subksp);
@@ -307,17 +307,20 @@ namespace femus {
 
       for(int i = _blockTypeRange[0]; i < _blockTypeRange[1]; i++) {
 	
- 	KSPSetType(subksps[i], (char*) KSPRICHARDSON);
- 	KSPRichardsonSetScale(subksps[i], 1.);
-	
+// 	KSPSetType(subksps[i], (char*) KSPRICHARDSON);
+//	double scale = pow(1.5,double((i-1)*2)); 
+// 	KSPRichardsonSetScale(subksps[i], scale);
+//	std::cout << i <<std::endl;
+	KSPSetType(subksps[i], KSPFGMRES);
+  	KSPSetNormType(subksps[i], KSP_NORM_UNPRECONDITIONED);
         PC subpcs;
-	KSPSetType(subksps[i],KSPPREONLY); // add by Guoyi Ke
 
         KSPGetPC(subksps[i], &subpcs);
-//        KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
+	KSPSetPCSide(subksps[i],PC_RIGHT);
+//      KSPSetTolerances(subksps[i], PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, 1);
 	KSPSetTolerances(subksps[i], 1.0e-15, 1.0e-20, PETSC_DEFAULT, 1);
         KSPSetFromOptions(subksps[i]);
-
+	
         if(this->_preconditioner_type == ILU_PRECOND)
           PCSetType(subpcs, (char*) PCILU);
         else
@@ -339,8 +342,8 @@ namespace femus {
         else
           PetscPreconditioner::set_petsc_preconditioner_type(this->_preconditioner_type, subpcs);
 
-        PCFactorSetZeroPivot(subpcs, epsilon);
-        PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
+  //      PCFactorSetZeroPivot(subpcs, epsilon);
+  //     PCFactorSetShiftType(subpcs, MAT_SHIFT_NONZERO);
       }
     }
   }

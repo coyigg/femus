@@ -154,7 +154,8 @@ namespace femus {
 
       if(_solver_type != PREONLY) {
         KSPSetInitialGuessKnoll(_ksp, PETSC_TRUE);
-        //KSPSetNormType(_ksp, KSP_NORM_NONE);
+      // KSPSetNormType(_ksp, KSP_NORM_NONE);
+      // KSPSetNormType(_ksp, KSP_NORM_PRECONDITIONED);
       }
 
       if(_solver_type == FGMRES) {

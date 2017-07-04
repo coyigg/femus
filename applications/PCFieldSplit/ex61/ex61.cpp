@@ -87,13 +87,13 @@ int main(int argc, char** args) {
   MultiLevelMesh mlMsh;
   // read coarse level mesh and generate finers level meshes
   double scalingFactor = 1.;
-  mlMsh.ReadCoarseMesh("./input/square_tri.neu","seventh",scalingFactor);
+  mlMsh.ReadCoarseMesh("./input/cube_wedge.neu","seventh",scalingFactor);
   /* "seventh" is the order of accuracy that is used in the gauss integration scheme
      probably in the furure it is not going to be an argument of this function   */
   unsigned dim = mlMsh.GetDimension();
 
   unsigned numberOfUniformLevels = 1;
-  unsigned numberOfSelectiveLevels = 4;
+  unsigned numberOfSelectiveLevels = 3;
   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , SetRefinementFlag);
 //   unsigned numberOfSelectiveLevels = 0;
 //   mlMsh.RefineMesh(numberOfUniformLevels + numberOfSelectiveLevels, numberOfUniformLevels , NULL);
@@ -136,8 +136,8 @@ int main(int argc, char** args) {
   
   system.SetMgType(V_CYCLE);
 
-  system.SetNumberPreSmoothingStep(4);
-  system.SetNumberPostSmoothingStep(4);
+  system.SetNumberPreSmoothingStep(2);
+  system.SetNumberPostSmoothingStep(2);
   // initilaize and solve the system
   system.init();
 
